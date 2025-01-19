@@ -31,7 +31,7 @@ class Resorts(Enum):
         base_url="https://reservenski.parksolitude.com",
         main_screen_string="Reserve Parking Before Arriving",
         passholder_string="Season Pass Holders",
-        carpool_string="Carpool 4+ occupancy or ADA ",
+        carpool_string="Carpool 4+ occupancy or ADA (Verified by parking ambassador upon arrival)",
         creditcard_string="Paid Parking",
         creditcard_honk_payment_button_string="Pay $35.00 and Park"
     )

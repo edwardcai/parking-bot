@@ -167,6 +167,7 @@ class WebdriverPoller:
         for btn in btns:
             if btn.is_enabled() and btn.is_displayed() and btn.location['x'] > 0 and btn.location['y'] > 0:
                 btn.click()
+                time.sleep(1.0)
                 break
 
     def select_parking_option(self, reservation_type: ReservationType):
