@@ -197,6 +197,19 @@ class WebdriverPoller:
     def reserve(self, reservation_type: ReservationType):
         """Once we are on honk, pull trigger and reserve the pass!
         """
+
+        # Terms and Conditions Checkbox
+        terms_xpath = '//input[@type="checkbox" and @id="terms"]'
+
+        # Ensure checkbox is there
+        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
+            (By.XPATH, terms_xpath)))
+
+        # Click checkbox
+        terms_checkbox = self.driver.find_element(
+            By.XPATH, terms_xpath)
+        terms_checkbox.click()
+
         if (reservation_type == ReservationType.PASSHOLDER):
             btn_xpath = '//div[text()="Redeem A Pass"]/parent::*/parent::*'
         elif (reservation_type == ReservationType.CARPOOL):
@@ -234,14 +247,6 @@ class WebdriverPoller:
 
     def output(self):
         print(self.driver.current_url)
-
-    def make_reservation(self, target_date):
-        self.login()
-        self.activate_code()
-        self.go_to_selection_calendar()
-        self.navigate_to_date(target_date)
-        self.select_parking_option()
-        # self.reserve()
 
     def poll_for_reservation(self, target_date, reservation_type: ReservationType):
         """Polls for a reservation for the given date"""

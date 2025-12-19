@@ -7,3 +7,6 @@ __pycache__/
 
 # polling config
 pollingConfig*.json
+
+# Log files
+*.log

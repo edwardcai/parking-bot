@@ -21,7 +21,7 @@ class Resorts(Enum):
         base_url="https://reservenski.parkbrightonresort.com",
         main_screen_string="Reserve Parking Before Arriving",
         passholder_string="Season\'s Pass",
-        carpool_string="3+ Carpool",
+        carpool_string="4+ Carpool (Occupancy will be verified by Parking Ambassador upon arrival)",
         creditcard_string="General Parking (Less than 3 occupants)",
         creditcard_honk_payment_button_string="Pay $20.00 and Park"
     )
