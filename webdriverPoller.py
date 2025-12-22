@@ -4,6 +4,7 @@ defaults to pollingConfig.json
 """
 
 from argparse import ArgumentParser
+from random import random
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -20,6 +21,11 @@ from SMSHelper import SMSHelper
 
 from pollingConfig import ReservationType, load_json_config
 from resorts import Resorts
+
+
+def sleep_random(min_seconds, max_seconds):
+    sleep_time = random.uniform(min_seconds, max_seconds)
+    time.sleep(sleep_time)
 
 
 class WebdriverPoller:
@@ -58,11 +64,13 @@ class WebdriverPoller:
         submit_btn = self.driver.find_element(
             By.XPATH, '//*[@id="root"]/div/div/div/div[1]/div[2]/div/div/form/div[3]/button')
 
+        sleep_random(1, 3)
+
         # Fill
-        # username.send_keys(os.environ['solitude_username'])
-        # password.send_keys(os.environ['solitude_password'])
         username.send_keys(self.username)
         password.send_keys(self.password)
+
+        sleep_random(1, 3)
 
         # Submit
         submit_btn.click()
@@ -85,6 +93,8 @@ class WebdriverPoller:
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.XPATH, btn_xpath)))
 
+        sleep_random(1, 3)
+
         # Select Code
         btn = self.driver.find_element(
             By.XPATH, btn_xpath)
@@ -100,6 +110,7 @@ class WebdriverPoller:
         """Goes to the calendar selection page, if not already there
         """
         if (self.driver.current_url != self.calendar_url):
+            sleep_random(1, 3)
             self.driver.get(self.calendar_url)
 
     def navigate_to_date(self, date):
@@ -113,15 +124,19 @@ class WebdriverPoller:
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.CLASS_NAME, 'mbsc-calendar-month')))
 
+        sleep_random(1, 3)
+
         # Navigate to appropriate month
         self._go_to_month(date)
+
+        sleep_random(1, 3)
 
         # Click the date
         self._click_date(date)
 
     def _go_to_month(self, date):
         """Assumes already on the calendar, checks the displayed month
-        and if it is not the correct month (matching date) then goes 
+        and if it is not the correct month (matching date) then goes
         FORWARD until it reaches a match
 
         Args:
@@ -133,13 +148,14 @@ class WebdriverPoller:
 
         target_month = date.strftime("%B")
         while current_month != target_month:
+            sleep_random(1, 3)
             # Click next button
             btn = self.driver.find_element(
                 By.XPATH, '//button[contains(@aria-label, "Next page")]')
             btn.click()
 
             # Wait until month is showing
-            time.sleep(.5)
+            sleep_random(1, 3)
             current_month = self.driver.find_element(
                 By.CLASS_NAME, "mbsc-calendar-month").text
 
@@ -166,8 +182,9 @@ class WebdriverPoller:
 
         for btn in btns:
             if btn.is_enabled() and btn.is_displayed() and btn.location['x'] > 0 and btn.location['y'] > 0:
+                sleep_random(1, 3)
                 btn.click()
-                time.sleep(1.0)
+                sleep_random(1, 3)
                 break
 
     def select_parking_option(self, reservation_type: ReservationType):
@@ -188,6 +205,7 @@ class WebdriverPoller:
             (By.XPATH, btn_xpath)))
         btn = self.driver.find_element(
             By.XPATH, btn_xpath)
+        sleep_random(1, 3)
         btn.click()
 
         # Wait for honk to load
@@ -208,6 +226,7 @@ class WebdriverPoller:
         # Click checkbox
         terms_checkbox = self.driver.find_element(
             By.XPATH, terms_xpath)
+        sleep_random(1, 3)
         terms_checkbox.click()
 
         if (reservation_type == ReservationType.PASSHOLDER):
@@ -231,6 +250,7 @@ class WebdriverPoller:
         # Get Button
         btn = self.driver.find_element(
             By.XPATH, btn_xpath)
+        sleep_random(1, 3)
         btn.click()
 
         # Wait for Confirm button
@@ -240,6 +260,7 @@ class WebdriverPoller:
         # Click confirm button
         confirm_btn = self.driver.find_element(
             By.XPATH, '//button[text()="Confirm"]')
+        sleep_random(1, 3)
         confirm_btn.click()
         # Give some time for the reservation to complete
         time.sleep(3)
@@ -276,11 +297,11 @@ class WebdriverPoller:
                 # Option is still sold out, navigate to next/previous day and try again
                 print("Failed attempt at", dt.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"))
-                time.sleep(30)
+                sleep_random(20, 40)
                 self.driver.find_element(
                     By.XPATH, '//button[text()="Next Day >"]').click()
 
-                time.sleep(1)
+                sleep_random(1, 3)
                 self.driver.find_element(
                     By.XPATH, '//button[text()="< Previous Day"]').click()
 
