@@ -276,7 +276,7 @@ class WebdriverPoller:
                 # Option is still sold out, navigate to next/previous day and try again
                 print("Failed attempt at", dt.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"))
-                time.sleep(5)
+                time.sleep(30)
                 self.driver.find_element(
                     By.XPATH, '//button[text()="Next Day >"]').click()
 
