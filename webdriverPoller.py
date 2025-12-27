@@ -4,7 +4,6 @@ defaults to pollingConfig.json
 """
 
 from argparse import ArgumentParser
-from random import random
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -16,6 +15,7 @@ from selenium.webdriver.chrome.options import Options
 from tempfile import mkdtemp
 import time
 import datetime as dt
+import random
 
 from SMSHelper import SMSHelper
 
