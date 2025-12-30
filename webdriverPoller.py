@@ -312,45 +312,55 @@ class WebdriverPoller:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--config", default="pollingConfig.json")
-    args = parser.parse_args()
+    try:
+        parser = ArgumentParser()
+        parser.add_argument("--config", default="pollingConfig.json")
+        args = parser.parse_args()
 
-    config = load_json_config(args.config)
+        config = load_json_config(args.config)
 
-    # Check for sms options
-    # if config has smsEmail and smsPassword, then we will use the sms helper
-    if SMSHelper.is_valid_config(config):
-        sms_helper = SMSHelper(config)
-    else:
-        sms_helper = None
+        # Check for sms options
+        # if config has smsEmail and smsPassword, then we will use the sms helper
+        if SMSHelper.is_valid_config(config):
+            sms_helper = SMSHelper(config)
+        else:
+            sms_helper = None
 
-    target = config.dates[0]
-    # Check to see if target date is in the past
-    today = dt.datetime.now()
-    if (dt.datetime(target.year, target.month, target.day) < dt.datetime(today.year, today.month, today.day)):
-        raise Exception(
-            "Target date {} is in the past".format(target.strftime("%Y-%m-%d")))
-    sp.poll_for_reservation(
-        dt.datetime(target.year, target.month, target.day),
-        config.reservation_type)
+        target = config.dates[0]
+        # Check to see if target date is in the past
+        today = dt.datetime.now()
+        if (dt.datetime(target.year, target.month, target.day) < dt.datetime(today.year, today.month, today.day)):
+            raise Exception(
+                "Target date {} is in the past".format(target.strftime("%Y-%m-%d")))
 
-    options = webdriver.ChromeOptions()
+        options = webdriver.ChromeOptions()
 
-    options.add_argument("--headless=new")
-    options.add_argument('--no-sandbox')
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1280x1696")
-    chrome = webdriver.Chrome(options=options)
+        options.add_argument("--headless=new")
+        options.add_argument('--no-sandbox')
+        options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1280x1696")
+        chrome = webdriver.Chrome(options=options)
 
-    sp = WebdriverPoller(chrome, credentials={
-        "username": config.username,
-        "password": config.password
-    },
-        resort=config.resort,
-        sms_helper=sms_helper
-    )
-    sp.start_session()
+        print(
+            f"Attempting to reserve parking on {target.strftime('%Y-%m-%d')} at {config.resort.name} for  {config.username}")
+
+        sp = WebdriverPoller(chrome, credentials={
+            "username": config.username,
+            "password": config.password
+        },
+            resort=config.resort,
+            sms_helper=sms_helper
+        )
+        sp.start_session()
+
+        sp.poll_for_reservation(
+            dt.datetime(target.year, target.month, target.day),
+            config.reservation_type)
+    except Exception as e:
+        if sms_helper:
+            sms_helper.send_message(
+                "Error during parking reservation polling: " + str(e))
+        print("Error during polling: ", str(e))
 
     # Set a breakpoint here to keep page open
     print("Done")

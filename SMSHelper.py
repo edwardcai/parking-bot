@@ -1,11 +1,13 @@
 import smtplib
 import sys
+from email.message import EmailMessage
 
 CARRIERS = {
     "att": "@mms.att.net",
     "tmobile": "@tmomail.net",
     "verizon": "@vtext.com",
-    "sprint": "@messaging.sprintpcs.com"
+    "sprint": "@messaging.sprintpcs.com",
+    "googleFi": "@msg.fi.google.com"
 }
 
 
@@ -20,11 +22,16 @@ class SMSHelper:
         recipient = self.alert_number + CARRIERS[self.alert_carrier]
         auth = (self.email, self.password)
 
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(auth[0], auth[1])
+        msg = EmailMessage()
+        # subject line is required, but SMS doesn't use it
+        msg['Subject'] = ""
+        msg['From'] = self.email
+        msg['To'] = recipient
+        msg.set_content(message)
 
-        server.sendmail(auth[0], recipient, message)
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(auth[0], auth[1])
+            smtp.send_message(msg)
 
     @staticmethod
     def is_valid_config(config):
