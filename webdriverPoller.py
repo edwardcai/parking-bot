@@ -318,6 +318,23 @@ if __name__ == "__main__":
 
     config = load_json_config(args.config)
 
+    # Check for sms options
+    # if config has smsEmail and smsPassword, then we will use the sms helper
+    if SMSHelper.is_valid_config(config):
+        sms_helper = SMSHelper(config)
+    else:
+        sms_helper = None
+
+    target = config.dates[0]
+    # Check to see if target date is in the past
+    today = dt.datetime.now()
+    if (dt.datetime(target.year, target.month, target.day) < dt.datetime(today.year, today.month, today.day)):
+        raise Exception(
+            "Target date {} is in the past".format(target.strftime("%Y-%m-%d")))
+    sp.poll_for_reservation(
+        dt.datetime(target.year, target.month, target.day),
+        config.reservation_type)
+
     options = webdriver.ChromeOptions()
 
     options.add_argument("--headless=new")
@@ -325,13 +342,6 @@ if __name__ == "__main__":
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1280x1696")
     chrome = webdriver.Chrome(options=options)
-
-    # Check for sms options
-    # if config has smsEmail and smsPassword, then we will use the sms helper
-    if SMSHelper.is_valid_config(config):
-        sms_helper = SMSHelper(config)
-    else:
-        sms_helper = None
 
     sp = WebdriverPoller(chrome, credentials={
         "username": config.username,
@@ -341,10 +351,6 @@ if __name__ == "__main__":
         sms_helper=sms_helper
     )
     sp.start_session()
-    target = config.dates[0]
-    sp.poll_for_reservation(
-        dt.datetime(target.year, target.month, target.day),
-        config.reservation_type)
-    # sp.reserve()
+
     # Set a breakpoint here to keep page open
     print("Done")
