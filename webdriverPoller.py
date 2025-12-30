@@ -85,6 +85,8 @@ class WebdriverPoller:
         """Goes to the parking code page and choose the pass option
         this will give us the $0 option in booking
         """
+        sleep_random(1, 3)
+
         # Go to codes
         self.driver.get(self.parking_codes_url)
 
