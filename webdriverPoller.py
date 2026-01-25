@@ -23,11 +23,6 @@ from pollingConfig import ReservationType, load_json_config
 from resorts import Resorts
 
 
-def sleep_random(min_seconds, max_seconds):
-    sleep_time = random.uniform(min_seconds, max_seconds)
-    time.sleep(sleep_time)
-
-
 class WebdriverPoller:
     def __init__(self, driver, credentials, resort, sms_helper=None):
         self.driver = driver
@@ -38,6 +33,27 @@ class WebdriverPoller:
         self.parking_codes_url = resort.value.base_url + "/parking-codes"
         self.calendar_url = resort.value.base_url + "/select-parking"
         self.sms_helper = sms_helper
+
+    def sleep_random(self, min_seconds, max_seconds):
+        # Check for error message, which usually means we're being rate limited
+        # Try multiple XPath variations to catch the error message
+
+        error_xpath = '//*[text()="Something went wrong. Please try again."]'
+
+        error_message = self.driver.find_elements(By.XPATH, error_xpath)
+
+        if len(error_message) > 0:
+            # If we see this message, quit immediately
+            raise Exception("Getting rate limited, quitting")
+
+        sleep_time = random.uniform(min_seconds, max_seconds)
+        time.sleep(sleep_time)
+
+        error_message = self.driver.find_elements(By.XPATH, error_xpath)
+
+        if len(error_message) > 0:
+            # If we see this message, quit immediately
+            raise Exception("Getting rate limited, quitting")
 
     def start_session(self):
         """Creates the selenium session
@@ -64,16 +80,18 @@ class WebdriverPoller:
         submit_btn = self.driver.find_element(
             By.XPATH, '//*[@id="root"]/div/div/div/div[1]/div[2]/div/div/form/div[3]/button')
 
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Fill
         username.send_keys(self.username)
         password.send_keys(self.password)
 
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Submit
         submit_btn.click()
+
+        self.sleep_random(1, 3)
 
         # Wait until finished and re-directed
         WebDriverWait(self.driver, 15).until(EC.presence_of_all_elements_located(
@@ -85,7 +103,7 @@ class WebdriverPoller:
         """Goes to the parking code page and choose the pass option
         this will give us the $0 option in booking
         """
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Go to codes
         self.driver.get(self.parking_codes_url)
@@ -95,7 +113,7 @@ class WebdriverPoller:
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.XPATH, btn_xpath)))
 
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Select Code
         btn = self.driver.find_element(
@@ -112,7 +130,7 @@ class WebdriverPoller:
         """Goes to the calendar selection page, if not already there
         """
         if (self.driver.current_url != self.calendar_url):
-            sleep_random(1, 3)
+            self.sleep_random(1, 3)
             self.driver.get(self.calendar_url)
 
     def navigate_to_date(self, date):
@@ -126,12 +144,12 @@ class WebdriverPoller:
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.CLASS_NAME, 'mbsc-calendar-month')))
 
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Navigate to appropriate month
         self._go_to_month(date)
 
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
 
         # Click the date
         self._click_date(date)
@@ -150,14 +168,14 @@ class WebdriverPoller:
 
         target_month = date.strftime("%B")
         while current_month != target_month:
-            sleep_random(1, 3)
+            self.sleep_random(1, 3)
             # Click next button
             btn = self.driver.find_element(
                 By.XPATH, '//button[contains(@aria-label, "Next page")]')
             btn.click()
 
             # Wait until month is showing
-            sleep_random(1, 3)
+            self.sleep_random(1, 3)
             current_month = self.driver.find_element(
                 By.CLASS_NAME, "mbsc-calendar-month").text
 
@@ -184,9 +202,9 @@ class WebdriverPoller:
 
         for btn in btns:
             if btn.is_enabled() and btn.is_displayed() and btn.location['x'] > 0 and btn.location['y'] > 0:
-                sleep_random(1, 3)
+                self.sleep_random(1, 3)
                 btn.click()
-                sleep_random(1, 3)
+                self.sleep_random(1, 3)
                 break
 
     def select_parking_option(self, reservation_type: ReservationType):
@@ -207,7 +225,7 @@ class WebdriverPoller:
             (By.XPATH, btn_xpath)))
         btn = self.driver.find_element(
             By.XPATH, btn_xpath)
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
         btn.click()
 
         # Wait for honk to load
@@ -228,7 +246,7 @@ class WebdriverPoller:
         # Click checkbox
         terms_checkbox = self.driver.find_element(
             By.XPATH, terms_xpath)
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
         terms_checkbox.click()
 
         if (reservation_type == ReservationType.PASSHOLDER):
@@ -252,7 +270,7 @@ class WebdriverPoller:
         # Get Button
         btn = self.driver.find_element(
             By.XPATH, btn_xpath)
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
         btn.click()
 
         # Wait for Confirm button
@@ -262,7 +280,7 @@ class WebdriverPoller:
         # Click confirm button
         confirm_btn = self.driver.find_element(
             By.XPATH, '//button[text()="Confirm"]')
-        sleep_random(1, 3)
+        self.sleep_random(1, 3)
         confirm_btn.click()
         # Give some time for the reservation to complete
         time.sleep(3)
@@ -299,11 +317,11 @@ class WebdriverPoller:
                 # Option is still sold out, navigate to next/previous day and try again
                 print("Failed attempt at", dt.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"))
-                sleep_random(20, 40)
+                self.sleep_random(20, 40)
                 self.driver.find_element(
                     By.XPATH, '//button[text()="Next Day >"]').click()
 
-                sleep_random(1, 3)
+                self.sleep_random(1, 3)
                 self.driver.find_element(
                     By.XPATH, '//button[text()="< Previous Day"]').click()
 
